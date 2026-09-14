@@ -1,0 +1,11 @@
+# build outputs
+code/build/
+code/03-grids-bfs-dfs/astar/build/
+*.o
+*.out
+a.out
+# editor / os
+.vscode/
+.DS_Store
+# not part of the study material
+T-Robotics-GitHub-Manual.pdf

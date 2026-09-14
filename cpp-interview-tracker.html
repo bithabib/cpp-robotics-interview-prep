@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C++ interview tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDF1F5; --grid:#DCE3EA; --ink:#17232E; --ink-2:#4E5D6B; --ink-3:#8A98A6;
+    --line:#C9D3DD; --white:#FFFFFF;
+    --blue:#1E5BFF; --blue-soft:#E3EBFF;
+    --green:#1A8A5C; --green-soft:#DDF3E8;
+    --amber:#B8730A; --amber-soft:#FBEED3;
+    --red:#B4432D;
+    --r-s:4px; --r-m:8px;
+    font-family:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-size:15px;line-height:1.5}
+  body{
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:24px 24px;
+  }
+  code,.mono{font-family:"IBM Plex Mono", ui-monospace, Menlo, monospace}
+  button{font:inherit;cursor:pointer}
+  button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+  .app{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+
+  /* header */
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+  h1{font-size:26px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--ink-2);margin:0}
+  .readiness{
+    background:var(--white);border:1px solid var(--line);border-radius:var(--r-m);
+    padding:12px 16px;min-width:300px;flex:1;max-width:420px
+  }
+  .readiness .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .readiness .pct{font-size:22px;font-weight:600}
+  .readiness .verdict{color:var(--ink-2);font-size:14px}
+  .bar{height:8px;background:var(--grid);border-radius:99px;overflow:hidden;margin-top:8px}
+  .bar > i{display:block;height:100%;background:var(--blue);width:0;transition:width .3s ease}
+  .bar > i.done{background:var(--green)}
+
+  /* layout */
+  .layout{display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:start}
+  @media (max-width:760px){.layout{grid-template-columns:1fr}}
+
+  /* phase track */
+  .track{background:var(--white);border:1px solid var(--line);border-radius:var(--r-m);padding:8px;position:sticky;top:12px}
+  @media (max-width:760px){.track{position:static;display:flex;overflow-x:auto;gap:6px}}
+  .phase-btn{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    background:none;border:0;border-radius:var(--r-s);padding:10px 10px;color:var(--ink)
+  }
+  @media (max-width:760px){.phase-btn{width:auto;white-space:nowrap}}
+  .phase-btn:hover{background:var(--paper)}
+  .phase-btn.active{background:var(--blue-soft);color:var(--blue)}
+  .phase-btn .n{
+    width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);
+    display:grid;place-items:center;font-size:12px;flex:none;color:var(--ink-2)
+  }
+  .phase-btn .n.full{background:var(--green);border-color:var(--green);color:#fff}
+  .phase-btn .n.part{border-color:var(--blue);color:var(--blue)}
+  .phase-btn .lbl{flex:1;font-weight:500}
+  .phase-btn .cnt{font-size:12px;color:var(--ink-3)}
+  .phase-btn.active .cnt{color:var(--blue)}
+
+  /* main panel */
+  .panel{background:var(--white);border:1px solid var(--line);border-radius:var(--r-m);padding:18px 20px}
+  .panel h2{font-size:18px;margin:0 0 4px;font-weight:600}
+  .panel .why{color:var(--ink-2);margin:0 0 14px;max-width:62ch}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-bottom:10px}
+  .legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+  .legend .l-un::before{background:var(--green)}
+  .legend .l-help::before{background:var(--amber)}
+  .legend .l-none::before{background:var(--grid);border:1px solid var(--line)}
+
+  .group{margin-top:14px}
+  .group h3{font-size:13px;font-weight:600;color:var(--ink-2);margin:0 0 6px}
+  ul.items{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+  li.item{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line)}
+  li.item .st{
+    flex:none;width:26px;height:26px;border-radius:var(--r-s);border:1.5px solid var(--line);
+    background:var(--white);display:grid;place-items:center;color:transparent;font-size:14px;transition:background .15s
+  }
+  li.item .st[data-s="unaided"]{background:var(--green);border-color:var(--green);color:#fff}
+  li.item .st[data-s="helped"]{background:var(--amber);border-color:var(--amber);color:#fff}
+  li.item .st[data-s="done"]{background:var(--green);border-color:var(--green);color:#fff}
+  li.item .name{flex:1;min-width:0}
+  li.item .name .t{display:block}
+  li.item .name .d{display:block;font-size:13px;color:var(--ink-3)}
+  li.item .tag{font-size:12px;color:var(--ink-3);flex:none}
+  li.item .tag.e{color:var(--green)} li.item .tag.m{color:var(--amber)} li.item .tag.h{color:var(--red)}
+  li.item.checked .name .t{color:var(--ink-2)}
+
+  .hint{font-size:13px;color:var(--ink-3);margin-top:10px}
+
+  /* assess */
+  .assess{margin-top:20px;background:var(--white);border:1px solid var(--line);border-radius:var(--r-m);padding:18px 20px}
+  .assess-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+  .assess-top h2{font-size:18px;margin:0;font-weight:600}
+  .assess-top p{margin:2px 0 0;color:var(--ink-2);font-size:14px}
+  .btn{
+    background:var(--blue);color:#fff;border:0;border-radius:var(--r-s);padding:10px 16px;font-weight:500
+  }
+  .btn[disabled]{opacity:.55;cursor:wait}
+  .btn.ghost{background:none;color:var(--ink-2);border:1px solid var(--line)}
+  .result{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
+  .result .badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:500;margin-bottom:8px}
+  .badge.not_yet{background:var(--grid);color:var(--ink-2)}
+  .badge.getting_close{background:var(--amber-soft);color:var(--amber)}
+  .badge.ready{background:var(--green-soft);color:var(--green)}
+  .result p{margin:6px 0;max-width:70ch}
+  .result ol{margin:6px 0 0;padding-left:20px;max-width:70ch}
+  .result li{margin:4px 0}
+  .result .when{font-size:12px;color:var(--ink-3);margin-top:10px}
+  .err{color:var(--red);font-size:14px;margin-top:10px}
+
+  .foot{display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:13px;color:var(--ink-3);flex-wrap:wrap;gap:8px}
+  .foot button{background:none;border:0;color:var(--ink-3);text-decoration:underline;padding:0}
+  .foot button:hover{color:var(--red)}
+  .saving{font-size:12px;color:var(--ink-3)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="head">
+    <div>
+      <h1>C++ interview tracker</h1>
+      <p class="sub">Learn the language, then the problems robotics interviews actually ask. Tap an item to change its state.</p>
+    </div>
+    <div class="readiness" aria-live="polite">
+      <div class="row"><span class="pct" id="pct">0%</span><span class="verdict" id="verdict">Just getting started</span></div>
+      <div class="bar"><i id="barfill"></i></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="track" id="track" aria-label="Phases"></nav>
+    <section class="panel" id="panel"></section>
+  </div>
+
+  <section class="assess">
+    <div class="assess-top">
+      <div>
+        <h2>Am I ready?</h2>
+        <p>Claude reads your progress and tells you what to do next. Run it about once a week.</p>
+      </div>
+      <button class="btn" id="assessBtn">Assess me</button>
+    </div>
+    <div id="assessOut"></div>
+  </section>
+
+  <div class="foot">
+    <span class="saving" id="saveState">Progress saves automatically</span>
+    <span>
+      <button id="exportBtn">Export progress</button> &nbsp;
+      <button id="importBtn">Import progress</button> &nbsp;
+      <button id="resetBtn">Reset all progress</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </span>
+  </div>
+</div>
+
+<script>
+/* ---------- curriculum ---------- */
+const PHASES = [
+  {
+    id:"cpp1", label:"C++ basics", kind:"topic",
+    why:"Just enough to write a solution. Use learncpp.com chapters 1–12 and compile locally with g++ -std=c++17 -Wall so you see real errors.",
+    groups:[
+      {name:"Language", items:[
+        ["c1","Variables, types, int/long/double, casting"],
+        ["c2","Functions, pass by value vs reference (int&)"],
+        ["c3","if/for/while, range-for, auto"],
+        ["c4","std::vector — push_back, size, indexing, 2D vectors"],
+        ["c5","std::string — substr, find, compare, to_string/stoi"],
+        ["c6","std::unordered_map and unordered_set"],
+        ["c7","std::pair, std::tuple, structured bindings"],
+        ["c8","Compile and run locally with g++ (not only in the browser)"],
+      ]},
+      {name:"Re-solve in C++ (you know these from Python)", items:[
+        ["r1","Two Sum","1","e"],["r2","Contains Duplicate","217","e"],["r3","Valid Anagram","242","e"],
+        ["r4","Reverse Linked List","206","e"],["r5","Merge Two Sorted Lists","21","e"],
+        ["r6","Maximum Subarray","53","m"],["r7","Move Zeroes","283","e"],
+        ["r8","Best Time to Buy and Sell Stock","121","e"],["r9","Valid Parentheses","20","e"],["r10","Binary Search","704","e"],
+      ]},
+    ]
+  },
+  {
+    id:"cpp2", label:"C++ interviewers test", kind:"topic",
+    why:"These are the questions that get asked alongside the coding problem. Mark an item done only when you could explain it out loud to someone.",
+    groups:[
+      {name:"Memory and objects", items:[
+        ["m1","Pointers vs references; what ++a inside void f(int a) does"],
+        ["m2","const and const-correctness (const&, const methods)"],
+        ["m3","Classes: constructor, destructor, RAII"],
+        ["m4","std::unique_ptr vs std::shared_ptr, when to use each"],
+        ["m5","Stack vs heap, new/delete and why you avoid them"],
+        ["m6","size_t is unsigned: why while(--n >= 0) loops forever"],
+      ]},
+      {name:"STL", items:[
+        ["s1","std::sort with custom comparator / lambda"],
+        ["s2","std::priority_queue (min-heap via greater<>)"],
+        ["s3","std::deque, std::queue, std::stack"],
+        ["s4","std::map vs unordered_map, iterators"],
+        ["s5","std::array, std::string_view basics"],
+      ]},
+      {name:"Problems (arrays, hashing, intervals)", items:[
+        ["p1","Product of Array Except Self","238","m"],["p2","Merge Intervals","56","m"],["p3","Insert Interval","57","m"],
+        ["p4","3Sum","15","m"],["p5","Container With Most Water","11","m"],["p6","Rotate Image","48","m"],
+        ["p7","Top K Frequent Elements","347","m"],["p8","Min Stack","155","m"],
+      ]},
+    ]
+  },
+  {
+    id:"grid", label:"Grids and BFS/DFS", kind:"problem",
+    why:"Where robotics interviews live. A grid is a costmap; BFS is a wavefront planner. Finish this phase and write A* from scratch.",
+    groups:[
+      {name:"Warm-up", items:[
+        ["g1","Robot Return to Origin","657","e"],["g2","Flood Fill","733","e"],["g3","Number of Islands","200","m"],
+      ]},
+      {name:"Core", items:[
+        ["g4","Rotting Oranges (multi-source BFS)","994","m"],["g5","Shortest Path in Binary Matrix (8-connected)","1091","m"],
+        ["g6","01 Matrix (distance transform)","542","m"],["g7","Unique Paths II (obstacles)","63","m"],
+        ["g8","Minimum Path Sum","64","m"],["g9","Word Search (backtracking)","79","m"],["g10","Pacific Atlantic Water Flow","417","m"],
+      ]},
+      {name:"Build", items:[
+        ["g11","A* on a grid, from scratch, in a repo with tests"],
+      ]},
+    ]
+  },
+  {
+    id:"graph", label:"Graphs and Dijkstra", kind:"problem",
+    why:"Dijkstra is the single most relevant algorithm for robotics roles. Be able to write it in 15 minutes without looking anything up.",
+    groups:[
+      {name:"Traversal and structure", items:[
+        ["h1","Clone Graph","133","m"],["h2","Course Schedule (topological sort)","207","m"],
+        ["h3","Redundant Connection (union-find)","684","m"],["h4","Graph Valid Tree","261","m"],
+      ]},
+      {name:"Shortest paths", items:[
+        ["h5","Network Delay Time (Dijkstra)","743","m"],["h6","Path with Minimum Effort","1631","m"],
+        ["h7","Swim in Rising Water","778","h"],["h8","Cheapest Flights Within K Stops","787","m"],
+      ]},
+    ]
+  },
+  {
+    id:"heap", label:"Heaps, trees, design", kind:"problem",
+    why:"Rounds out the standard interview set. LRU Cache and K Closest Points come up constantly.",
+    groups:[
+      {name:"Heaps and geometry", items:[
+        ["k1","Kth Largest Element in an Array","215","m"],["k2","K Closest Points to Origin","973","m"],
+        ["k3","Kth Smallest in a Sorted Matrix","378","m"],["k4","Sliding Window Maximum","239","h"],
+      ]},
+      {name:"Trees and design", items:[
+        ["k5","Binary Tree Level Order Traversal","102","m"],["k6","Lowest Common Ancestor","236","m"],
+        ["k7","LRU Cache","146","m"],["k8","Trapping Rain Water","42","h"],
+      ]},
+    ]
+  },
+  {
+    id:"robo", label:"Robotics-specific", kind:"topic",
+    why:"Not on LeetCode, but asked in robotics rounds. Each one is also a small portfolio piece for your CV.",
+    groups:[
+      {name:"Implement from scratch", items:[
+        ["b1","1D Kalman filter in C++"],
+        ["b2","PID controller with anti-windup, plus a tiny simulation"],
+        ["b3","Rotation matrix, quaternion, transform chaining (Eigen)"],
+        ["b4","Closest pair of 2D points / line fitting (RANSAC discussion)"],
+      ]},
+      {name:"Premium LeetCode (skip if no subscription)", items:[
+        ["b5","Robot Room Cleaner","489","h"],["b6","The Maze II","505","m"],
+      ]},
+      {name:"Portfolio for the CV", items:[
+        ["b7","Rewrite one Python robotics project in C++ (public repo)"],
+        ["b8","Official project written as 3 CV bullets with numbers"],
+        ["b9","Each repo has README, architecture diagram, 60-second demo video"],
+      ]},
+    ]
+  },
+];
+
+/* ---------- state ---------- */
+const KEY = "cpp-tracker-v1";
+let state = { status:{}, activePhase:"cpp1", lastAssessment:null };
+let memoryOnly = false;
+
+const inClaude = !!(window.storage && window.storage.get);
+function localGet(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+function localSet(v){ try{ localStorage.setItem(KEY,v); return true; }catch(e){ return false; } }
+
+async function load(){
+  let raw=null;
+  if(inClaude){
+    try{ const r=await window.storage.get(KEY); raw=r&&r.value; }catch(e){ raw=null; }
+  }else{
+    raw=localGet(); if(raw===null && !("localStorage" in window)) memoryOnly=true;
+  }
+  if(raw){ try{ state=Object.assign(state, JSON.parse(raw)); }catch(e){} }
+  render();
+}
+let saveTimer=null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    const el=document.getElementById("saveState");
+    if(memoryOnly){ el.textContent="Progress kept for this session only — use Export to keep a copy"; return; }
+    const v=JSON.stringify(state);
+    if(inClaude){
+      try{ await window.storage.set(KEY, v); el.textContent="Saved to your Claude account"; }
+      catch(e){ el.textContent="Could not save — use Export to keep a copy"; }
+    }else{
+      el.textContent = localSet(v) ? "Saved in this browser" : "Could not save — use Export to keep a copy";
+    }
+  },300);
+}
+
+/* ---------- export / import ---------- */
+function exportProgress(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="cpp-tracker-progress-"+new Date().toISOString().slice(0,10)+".json";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function importProgress(file){
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const s=JSON.parse(rd.result);
+      if(!s||typeof s.status!=="object") throw new Error("bad");
+      state=Object.assign({status:{},activePhase:"cpp1",lastAssessment:null}, s);
+      save(); render();
+    }catch(e){ alert("That file isn't a tracker export."); }
+  };
+  rd.readAsText(file);
+}
+
+/* ---------- helpers ---------- */
+function allItems(){ return PHASES.flatMap(p=>p.groups.flatMap(g=>g.items.map(it=>({phase:p,it})))); }
+function isProblem(it){ return it.length>=3; }
+function isDone(id){ const s=state.status[id]; return s==="done"||s==="unaided"||s==="helped"; }
+function phaseStats(p){
+  const ids=p.groups.flatMap(g=>g.items.map(i=>i[0]));
+  const done=ids.filter(isDone).length;
+  return {done,total:ids.length};
+}
+function overall(){
+  const items=allItems();
+  const total=items.length, done=items.filter(x=>isDone(x.it[0])).length;
+  const probs=items.filter(x=>isProblem(x.it));
+  const unaided=probs.filter(x=>state.status[x.it[0]]==="unaided").length;
+  const cppIds=[...PHASES[0].groups[0].items,...PHASES[1].groups[0].items,...PHASES[1].groups[1].items].map(i=>i[0]);
+  const cppDone=cppIds.filter(isDone).length;
+  return {total,done,probTotal:probs.length,unaided,probDone:probs.filter(x=>isDone(x.it[0])).length,cppTotal:cppIds.length,cppDone};
+}
+function localVerdict(o){
+  const pct=o.total?Math.round(100*o.done/o.total):0;
+  let v="Just getting started";
+  if(pct>=15) v="Building fluency";
+  if(o.cppDone===o.cppTotal && pct>=40) v="Language done, keep solving";
+  if(o.cppDone===o.cppTotal && o.probDone/o.probTotal>=0.8 && o.unaided/o.probTotal>=0.6) v="Ready for coding rounds";
+  return {pct,v};
+}
+
+/* ---------- render ---------- */
+function render(){
+  renderHead(); renderTrack(); renderPanel(); renderAssessment();
+}
+function renderHead(){
+  const o=overall(), {pct,v}=localVerdict(o);
+  document.getElementById("pct").textContent=pct+"%";
+  document.getElementById("verdict").textContent=v;
+  const f=document.getElementById("barfill"); f.style.width=pct+"%"; f.classList.toggle("done",v==="Ready for coding rounds");
+}
+function renderTrack(){
+  const t=document.getElementById("track"); t.innerHTML="";
+  PHASES.forEach((p,i)=>{
+    const s=phaseStats(p);
+    const b=document.createElement("button");
+    b.className="phase-btn"+(state.activePhase===p.id?" active":"");
+    const cls=s.done===s.total?"full":(s.done>0?"part":"");
+    b.innerHTML=`<span class="n ${cls}">${s.done===s.total?"✓":i+1}</span><span class="lbl">${p.label}</span><span class="cnt">${s.done}/${s.total}</span>`;
+    b.onclick=()=>{state.activePhase=p.id;save();render();};
+    t.appendChild(b);
+  });
+}
+function renderPanel(){
+  const p=PHASES.find(x=>x.id===state.activePhase)||PHASES[0];
+  const el=document.getElementById("panel");
+  const hasProblems=p.groups.some(g=>g.items.some(isProblem));
+  let html=`<h2>${p.label}</h2><p class="why">${p.why}</p>`;
+  if(hasProblems) html+=`<div class="legend"><span class="l-un">Solved unaided in 25 min</span><span class="l-help">Needed the solution</span><span class="l-none">Not yet</span></div>`;
+  p.groups.forEach(g=>{
+    html+=`<div class="group"><h3>${g.name}</h3><ul class="items">`;
+    g.items.forEach(it=>{
+      const [id,name,lc,diff]=it; const s=state.status[id]||"";
+      const prob=isProblem(it);
+      const glyph=s==="unaided"||s==="done"?"✓":(s==="helped"?"~":"");
+      const label=prob?(s==="unaided"?"solved unaided":s==="helped"?"needed help":"not yet"):(s?"done":"not yet");
+      html+=`<li class="item ${s?"checked":""}">
+        <button class="st" data-s="${s}" data-id="${id}" data-prob="${prob?1:0}" aria-label="${name}: ${label}. Tap to change.">${glyph}</button>
+        <span class="name"><span class="t">${name}</span>${prob?`<span class="d mono">LeetCode ${lc}</span>`:""}</span>
+        ${prob?`<span class="tag ${diff}">${diff==="e"?"easy":diff==="m"?"medium":"hard"}</span>`:""}
+      </li>`;
+    });
+    html+=`</ul></div>`;
+  });
+  html+=`<p class="hint">${hasProblems?"Tap once for solved unaided, twice for needed help, three times to clear. Anything marked \"needed help\": redo it 3 days later and upgrade it when you can.":"Tap to mark done. Only mark a concept done when you can explain it out loud."}</p>`;
+  el.innerHTML=html;
+  el.querySelectorAll(".st").forEach(b=>b.onclick=()=>cycle(b.dataset.id,b.dataset.prob==="1"));
+}
+function cycle(id,prob){
+  const s=state.status[id]||"";
+  if(prob){ state.status[id]= s===""?"unaided": s==="unaided"?"helped":""; }
+  else{ state.status[id]= s?"":"done"; }
+  save(); render();
+}
+
+/* ---------- assessment ---------- */
+function progressSummary(){
+  const o=overall();
+  const lines=PHASES.map(p=>{
+    const s=phaseStats(p);
+    const helped=p.groups.flatMap(g=>g.items).filter(i=>state.status[i[0]]==="helped").map(i=>i[1]);
+    const missing=p.groups.flatMap(g=>g.items).filter(i=>!isDone(i[0])).map(i=>i[1]);
+    return `${p.label}: ${s.done}/${s.total} done. Needed help on: ${helped.join("; ")||"none"}. Not done: ${missing.join("; ")||"none"}.`;
+  });
+  return `Overall ${o.done}/${o.total}. Problems: ${o.probDone}/${o.probTotal} done, ${o.unaided} solved unaided. C++ concepts: ${o.cppDone}/${o.cppTotal}.\n`+lines.join("\n");
+}
+async function assess(){
+  const btn=document.getElementById("assessBtn"), out=document.getElementById("assessOut");
+  btn.disabled=true; btn.textContent="Assessing…";
+  const prompt=`You are coaching a robotics engineer who is a Python developer relearning algorithms in C++ to interview at UK robotics and AI companies (live C++ coding rounds, grid/graph problems, C++ fundamentals questions). They solved ~150 LeetCode problems in Python four years ago.
+
+Here is their tracker progress:
+${progressSummary()}
+
+Readiness standard: all C++ basics and interviewer-tested concepts done; at least 80% of problems done with at least 60% of all problems solved unaided; A* and Dijkstra written from scratch.
+
+Respond ONLY with JSON, no markdown fences, no preamble:
+{"readiness":"not_yet"|"getting_close"|"ready","score":0-100,"verdict":"2-3 plain sentences, direct and specific to this data, no flattery","next_steps":["3 to 5 concrete actions for the coming week"],"check_questions":["3 short questions the person should be able to answer out loud right now, drawn from what they marked done"]}`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:prompt}]})
+    });
+    const data=await res.json();
+    const text=(data.content||[]).map(c=>c.text||"").join("\n").replace(/```json|```/g,"").trim();
+    const parsed=JSON.parse(text);
+    state.lastAssessment={...parsed,at:new Date().toISOString()};
+    save(); renderAssessment();
+  }catch(e){
+    out.innerHTML=`<p class="err">Assessment didn't come back. Check your connection and try again.</p>`;
+  }finally{ btn.disabled=false; btn.textContent="Assess me"; }
+}
+function renderAssessment(){
+  const a=state.lastAssessment, out=document.getElementById("assessOut");
+  if(!a){ out.innerHTML=""; return; }
+  const label={not_yet:"Not ready yet",getting_close:"Getting close",ready:"Ready to interview"}[a.readiness]||a.readiness;
+  out.innerHTML=`<div class="result">
+    <span class="badge ${a.readiness}">${label} · ${a.score}/100</span>
+    <p>${a.verdict}</p>
+    <p><strong>This week</strong></p><ol>${(a.next_steps||[]).map(s=>`<li>${s}</li>`).join("")}</ol>
+    <p><strong>Say the answers out loud</strong></p><ol>${(a.check_questions||[]).map(s=>`<li>${s}</li>`).join("")}</ol>
+    <p class="when">Assessed ${new Date(a.at).toLocaleString()}</p>
+  </div>`;
+}
+
+document.getElementById("assessBtn").onclick=assess;
+document.getElementById("exportBtn").onclick=exportProgress;
+document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange=e=>{ if(e.target.files[0]) importProgress(e.target.files[0]); e.target.value=""; };
+document.getElementById("resetBtn").onclick=async()=>{
+  if(!confirm("Clear all progress and assessments?")) return;
+  state={status:{},activePhase:"cpp1",lastAssessment:null};
+  if(inClaude){ try{ await window.storage.delete(KEY); }catch(e){} }
+  else{ try{ localStorage.removeItem(KEY); }catch(e){} }
+  render();
+};
+if(!inClaude){
+  const b=document.getElementById("assessBtn");
+  b.disabled=true; b.textContent="Assess me (open in Claude)";
+  b.title="Assessment runs through Claude. Open this tracker inside claude.ai, or export your progress and paste it into a chat.";
+}
+load();
+</script>
+</body>
+</html>
