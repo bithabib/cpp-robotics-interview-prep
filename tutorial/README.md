@@ -13,6 +13,7 @@ plain words and a drawn example before any code appears.
 
 | # | Chapter | Tracker phase | What you get |
 |---|---------|---------------|--------------|
+| 00 | [The tree](00-the-tree.md) | (all) | The whole tutorial as one tree for recall; redraw it weekly from memory |
 | 01 | [C++ basics](01-cpp-basics.md) | C++ basics | What C++ is, how to compile and run, types, functions, loops, vector, string, maps, pairs, 10 warm-up problems |
 | 02 | [Memory, objects and the STL](02-cpp-interviewers-test.md) | C++ interviewers test | Pointers and references drawn as boxes, const, classes and RAII, smart pointers, stack vs heap, the `size_t` trap, sort/heap/queue/map, 8 array/hash/interval problems |
 | 03 | [Grids and BFS/DFS](03-grids-bfs-dfs.md) | Grids and BFS/DFS | Grids, queues, stacks and recursion from zero, BFS and DFS with hand traces, backtracking, grid DP, 10 grid problems, A* built from scratch with tests |

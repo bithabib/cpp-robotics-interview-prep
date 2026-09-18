@@ -6,6 +6,7 @@ on the one before. Read them in order.
 
 | Level | File | What you can do after it |
 |---|---|---|
+| 0 | [The tree](00-the-tree.md) | The whole subject as one tree; redraw it weekly from memory |
 | 1 | [What a system is](01-level-1-what-is-a-system.md) | Draw any robot as boxes and arrows, label the arrows, name a trade-off |
 | 2 | [The robot software stack](02-level-2-the-robot-software-stack.md) | Name every box in a real robot's stack, explain topics/services/actions, frames and time |
 | 3 | [Timing, reliability and safety](03-level-3-timing-reliability-safety.md) | Build a latency budget, handle failures, draw a state machine, test a robot system |
