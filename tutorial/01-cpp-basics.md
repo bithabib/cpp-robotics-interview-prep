@@ -686,9 +686,17 @@ std::sort(v.begin(), v.end());
 assert(v == std::vector<int>({4, 8}));  // you can compare whole vectors with ==
 ```
 
-**The bracket trap.** `std::vector<int> a(5, 0)` with round brackets means "5 boxes of 0".
-`std::vector<int> b{5, 0}` with curly brackets means "two boxes, holding 5 and 0". Use round
-brackets for (count, value) and curly for a literal list.
+**The bracket trap.** Round brackets mean "count, value"; curly brackets mean "here is the
+list". Side by side with the Python you already know:
+
+| Python | C++ | Result |
+|---|---|---|
+| `a = [0] * 5` | `std::vector<int> a(5, 0);` | five boxes of 0 |
+| `a = [5, 0]` | `std::vector<int> a{5, 0};` | two boxes, holding 5 and 0 |
+
+The trap is writing `std::vector<int> a{n, 0}` when you meant `[0] * n`. With `n = 3` you
+get the two-element list `[3, 0]`, the compiler says nothing, and you have a wrong-sized vector.
+Rule: round brackets for `(count, value)`, curly for a literal list.
 
 **A 2D vector is a vector of rows.** A grid with 3 rows and 4 columns is a vector holding 3
 vectors, each holding 4 ints:
