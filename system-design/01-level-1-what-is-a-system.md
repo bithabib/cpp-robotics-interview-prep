@@ -35,6 +35,32 @@ Sense: cameras, lidar, wheel encoders, GPS, microphones. Think: everything that 
 data into a decision. Act: motors, arms, grippers, lights, speakers. Keep this triangle in your
 head. When someone asks you to "design a robot that does X", start by drawing it.
 
+Each of the three words is really a family of boxes. Drawn as a tree, the same robot looks
+like this:
+
+```
+                                   ROBOT
+                                     |
+            +------------------------+------------------------+
+            |                        |                        |
+          SENSE                    THINK                     ACT
+            |                        |                        |
+     +------+------+       +---------+---------+        +-----+-----+
+     |      |      |       |         |         |        |     |     |
+  camera  lidar  wheel   "Where    "What     "How do  wheel  arm  gripper
+                encoders  am I?"   should I   I move   motors
+                                   do next?"  there?"
+                          (state    (planning)  (control)
+                        estimation)
+```
+
+Read it top down: the robot is made of three families, and each family is made of a few
+boxes. Sense and Act are usually short lists of hardware. Think is where the software lives,
+and it always splits into at least three questions: where am I (state estimation), what should
+I do next (planning), and how do I move to do it (control). Level 2 opens the Think branch
+fully; for now, just notice that the straight line and the tree are the same picture, and the
+tree is the one you should draw when someone asks "what is inside the brain?".
+
 ---
 
 ## 1.2 The four words
